@@ -10,18 +10,15 @@ import { randomUUID } from "crypto";
 import { Request, Response } from "express";
 import { LoginDTO } from "./dtos/LoginDTO";
 
-const IS_PROD = process.env.NODE_ENV === 'production';
-const ACCESS_TOKEN_AGE = parseInt(process.env.ACCESS_TOKEN_AGE || "60000");
-const REFRESH_TOKEN_AGE = parseInt(process.env.REFRESH_TOKEN_AGE || "2592000000");
-
 @Injectable()
 export class AuthService {
+    IS_PROD = process.env.NODE_ENV === 'production';
+    ACCESS_TOKEN_AGE = parseInt(process.env.ACCESS_TOKEN_AGE || "60000");
+    REFRESH_TOKEN_AGE = parseInt(process.env.REFRESH_TOKEN_AGE || "2592000000");
     constructor(
         private readonly prisma: PrismaService,
         private readonly jwt: JwtService
-    ) {
-        console.log('JWT_SECRET:', process.env.JWT_SECRET);
-    }
+    ) {}
     
     async login(dto: LoginDTO, res: Response) {
         const user = await this.prisma.user.findUnique({
@@ -105,7 +102,7 @@ export class AuthService {
 
     async issueToken(userId: number, res: Response, refreshTokenId?: number) {
         const refreshToken = randomUUID();
-        const expiresAt = new Date(Date.now() + REFRESH_TOKEN_AGE);
+        const expiresAt = new Date(Date.now() + this.REFRESH_TOKEN_AGE);
 
         if (!refreshTokenId) {
             const tok = await this.prisma.refreshToken.create({
@@ -129,16 +126,16 @@ export class AuthService {
         res.cookie("access_token", accessToken, {
             httpOnly: true,
             sameSite: "strict",
-            secure: IS_PROD,
-            maxAge: ACCESS_TOKEN_AGE,
+            secure: this.IS_PROD,
+            maxAge: this.ACCESS_TOKEN_AGE,
             path: "/"
         });
 
         res.cookie("refresh_token", refreshToken, {
             httpOnly: true,
             sameSite: "strict",
-            secure: IS_PROD,
-            maxAge: REFRESH_TOKEN_AGE,
+            secure: this.IS_PROD,
+            maxAge: this.REFRESH_TOKEN_AGE,
             path: "/auth"
         });
     }
@@ -147,16 +144,16 @@ export class AuthService {
         res.clearCookie("access_token", {
             httpOnly: true,
             sameSite: "strict",
-            secure: process.env.ENV === "production",
-            maxAge: ACCESS_TOKEN_AGE,
+            secure: this.IS_PROD,
+            maxAge: this.ACCESS_TOKEN_AGE,
             path: "/"
         });
 
         res.clearCookie("refresh_token", {
             httpOnly: true,
             sameSite: "strict",
-            secure: IS_PROD,
-            maxAge: REFRESH_TOKEN_AGE,
+            secure: this.IS_PROD,
+            maxAge: this.REFRESH_TOKEN_AGE,
             path: "/auth"
         });
     }

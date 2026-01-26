@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 const JWT_AGE = parseInt(process.env.ACCESS_TOKEN_AGE || "60000");
 
@@ -17,7 +18,8 @@ const JWT_AGE = parseInt(process.env.ACCESS_TOKEN_AGE || "60000");
       signOptions: { expiresIn: JWT_AGE }
     }),
     PrismaModule,
-    AuthModule
+    AuthModule,
+    UsersModule
   ],
   controllers: [],
   providers: [],

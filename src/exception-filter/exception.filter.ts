@@ -10,12 +10,6 @@ export class HttpErrorFilter implements ExceptionFilter {
 
         const status = e.getStatus();
         const resp = e.getResponse();
-        
-        if (status === 404) {
-            return res.status(404).json({
-                code: ErrorCode.NOT_FOUND
-            });
-        }
 
         if (typeof resp === "object" && resp && 'codes' in resp) {
             return res.status(status).json({
@@ -27,6 +21,12 @@ export class HttpErrorFilter implements ExceptionFilter {
             return res.status(status).json({
                 error_codes: [resp.code]
             })
+        }
+
+        if (status === 404) {
+            return res.status(404).json({
+                code: ErrorCode.NOT_FOUND
+            });
         }
 
         return res.status(status).json({
