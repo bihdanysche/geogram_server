@@ -1,6 +1,10 @@
-import { Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { PostsService } from "./posts.service";
 import { AuthGuard } from "../auth/guards/auth.guard";
+import { NewPostDTO } from "./dtos/NewPostDTO";
+import { UserId } from "../auth/decorators/user-id.decorator";
+import { EditPostDTO } from "./dtos/EditPostDTO";
+import { PaginationDTO } from "src/common/dtos/PaginationDTO";
 
 @Controller("/posts")
 export class PostsController {
@@ -8,36 +12,38 @@ export class PostsController {
         private readonly postsService: PostsService
     ) {}
 
-    @Post("/new")
+    @Post("/create")
     @UseGuards(AuthGuard)
-    async createNewPost() {
-
+    async createNewPost(@Body() dto: NewPostDTO, @UserId() usId: number) {
+        return await this.postsService.createPost(dto, usId);
     }
 
     @Patch("/:id/edit")
     @UseGuards(AuthGuard)
-    async editPost(@Param("id", ParseIntPipe) postId: number) {
-        
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async editPost(@Param("id", ParseIntPipe) postId: number, @Body() dto: EditPostDTO, @UserId() usId: number) {
+        await this.postsService.editPost(dto, postId, usId);
     }
 
     @Delete("/:id/delete")
     @UseGuards(AuthGuard)
-    async deletePost(@Param("id", ParseIntPipe) postId: number) {
-        
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deletePost(@Param("id", ParseIntPipe) postId: number, @UserId() usId: number) {
+        return await this.postsService.deletePost(postId, usId);
     }
 
     @Get("/")
-    async getAllPosts() {
-
+    async getAllPosts(@Query() dto: PaginationDTO) {
+        return await this.postsService.filterPosts(dto);
     }
 
     @Get("/from-user/:id")
-    async getAllPostsFromUser(@Param("id", ParseIntPipe) userId: number) {
-
+    async getAllPostsFromUser(@Param("id", ParseIntPipe) userId: number, @Query() dto: PaginationDTO) {
+        return await this.postsService.filterPosts(dto, userId);
     }
 
     @Get("/:id")
     async getPost(@Param("id", ParseIntPipe) postId: number) {
-        
+        return await this.postsService.getPost(postId);
     }
 }

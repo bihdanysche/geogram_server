@@ -7,7 +7,7 @@ import * as bcrypt from "bcrypt";
 import { ErrorCode } from "src/exception-filter/errors.enum";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import * as crypto from "crypto";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { LoginDTO } from "./dtos/LoginDTO";
 import { AppConfig } from "src/config/config";
 
@@ -22,7 +22,7 @@ export class AuthService {
         private readonly jwt: JwtService
     ) {}
     
-    async login(dto: LoginDTO, res: Response) {
+    async login(dto: LoginDTO, res: Response, req: Request) {
         const user = await this.prisma.user.findUnique({
             where: {username: dto.username}
         });
@@ -37,10 +37,10 @@ export class AuthService {
             throw new UnauthorizedException({code: ErrorCode.INVALID_PASSWORD});
         }
         
-        await this.issueToken(user.id, res);
+        await this.issueToken(user.id, res, req);
     }
 
-    async register(dto: RegisterDTO, res: Response) {
+    async register(dto: RegisterDTO, res: Response, req: Request) {
         let user: User;
         try {
             const hash = await bcrypt.hash(dto.password, 10);
@@ -59,7 +59,7 @@ export class AuthService {
             throw e;
         }
 
-        await this.issueToken(user.id, res);
+        await this.issueToken(user.id, res, req);
     }
 
     async logout(req: Request, res: Response) {
@@ -98,8 +98,8 @@ export class AuthService {
             }
             throw new UnauthorizedException({code: ErrorCode.REFRESH_TOKEN_INVALID});
         }
-
-        await this.issueToken(req.user!.userId, res, tok.id);
+        
+        await this.issueToken(req.user!.userId, res, req, tok.id);
     }
 
     async getSessions(sessionId: number, userId: number) {
@@ -130,14 +130,27 @@ export class AuthService {
         }
     }
 
-    async issueToken(userId: number, res: Response, refreshTokenId?: number) {
+    async issueToken(userId: number, res: Response, req: Request, refreshTokenId?: number) {
         const refreshToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + this.REFRESH_TOKEN_AGE);
+
+        const hIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+                req.headers['x-real-ip'] ||
+                req.ip ||
+                req.socket.remoteAddress;
+        const agent = req.headers['user-agent'] || "unknown";
+
+        let ip = "0.0.0.0";
+        if (hIp && Array.isArray(hIp)) {
+            ip = hIp[0];
+        } else if (hIp) {
+            ip = hIp;
+        }
 
         if (!refreshTokenId) {
             const tok = await this.prisma.refreshToken.create({
                 data: {
-                    userId, hash: refreshToken, expiresAt
+                    userId, hash: refreshToken, expiresAt, ip, agent
                 }
             });
             refreshTokenId = tok.id;
@@ -145,7 +158,7 @@ export class AuthService {
             await this.prisma.refreshToken.update({
                 where: {id: refreshTokenId},
                 data: {
-                    hash: refreshToken, expiresAt
+                    hash: refreshToken, expiresAt, ip, agent
                 }
             })
         }

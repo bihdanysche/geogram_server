@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Query, UseGuards } from "@nestjs/common";
 import { UserId } from "src/modules/auth/decorators/user-id.decorator";
 import { UsersService } from "./users.service";
 import { AuthGuard } from "src/modules/auth/guards/auth.guard";
@@ -22,7 +22,7 @@ export class UsersController {
     };
 
     @Get("/filter-users")
-    async allUsers(@Body() filter: UsersFilterDTO) {
+    async allUsers(@Query() filter: UsersFilterDTO) {
         return await this.usersService.filterUsers(filter);
     };
 

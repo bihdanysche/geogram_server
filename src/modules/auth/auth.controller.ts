@@ -17,19 +17,20 @@ export class AuthController {
 
     @Post("register")
     @UseGuards(NoAuthGuard)
-    async register(@Body() dto: RegisterDTO, @Res() res: Response) {
-        await this.auth.register(dto, res);
+    async register(@Body() dto: RegisterDTO, @Res() res: Response, @Req() req: Request) {
+        await this.auth.register(dto, res, req);
         res.status(HttpStatus.NO_CONTENT).end();
     }
 
     @Post("login")
     @UseGuards(NoAuthGuard)
-    async login(@Body() dto: LoginDTO, @Res() res: Response) {
-        await this.auth.login(dto, res);
+    async login(@Body() dto: LoginDTO, @Res() res: Response, @Req() req: Request) {
+        await this.auth.login(dto, res, req);
         res.status(HttpStatus.NO_CONTENT).end();
     }
 
     @Post("refresh-token")
+    @UseGuards(AuthGuard)
     async refresh(@Req() req: Request, @Res() res: Response) {
         if (!req.cookies.refresh_token) {
             throw new UnauthorizedException({code: ErrorCode.REFRESH_TOKEN_INVALID})
