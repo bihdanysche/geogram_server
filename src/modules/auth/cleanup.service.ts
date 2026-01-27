@@ -9,8 +9,8 @@ export class AuthCleanupService {
     constructor(
         private readonly prisma: PrismaService
     ) {}
-
-    @Cron("*/1 * * * *")
+    
+    @Cron("0 * * * *")
     async clearExpiredTokens() {
         const c = await this.prisma.refreshToken.deleteMany({
             where: {
