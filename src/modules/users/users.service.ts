@@ -74,44 +74,47 @@ export class UsersService {
     }
 
     async filterUsers(dto: UsersFilterDTO) {
-        const take = dto.maxPerPage;
-        const page = dto.page-1;
         const searchString = dto.searchString || "";
         const words = searchString
                     .trim()
                     .split(/\s+/)
                     .slice(0, 3);
 
-        // if (take > 15 || take < 1) {
-        //     take = 10;
-        // }
-        // if (page < 0) {
-        //     page = 0;
-        // }
-
         if (words.length === 0) {
             words.push('');
         }
+        
+        try {
+            const users = await this.prisma.user.findMany({
+                where: {
+                    OR: words.flatMap((w) => [
+                        { firstName: { contains: w, mode: "insensitive" } },
+                        { lastName: { contains: w, mode: "insensitive" } },
+                        { username: { contains: w, mode: "insensitive" } },
+                    ])
+                },
+                select: {
+                    firstName: true, lastName: true, username: true, id: true
+                },
+                orderBy: { username: "asc" },
+                take: dto.take+1,
+                cursor: dto.cursor ? { id: dto.cursor } : undefined
+            });
 
-        return await this.prisma.user.findMany({
-            where: {
-                OR: words.flatMap((w) => [
-                    { firstName: { contains: w, mode: "insensitive" } },
-                    { lastName: { contains: w, mode: "insensitive" } },
-                    { username: { contains: w, mode: "insensitive" } },
-                ])
-                // OR: [
-                //     { firstName: { contains: ["iva", "drem"], mode: "insensitive" } },
-                //     { lastName: { contains: searchString, mode: "insensitive" } },
-                //     { username: { contains: searchString, mode: "insensitive" } },
-                // ]
-            },
-            select: {
-                firstName: true, lastName: true, username: true, id: true
-            },
-            orderBy: { username: "asc" },
-            take,
-            skip: page * take
-        });
+            let nextCursor: number | null = null;
+            if (users.length > dto.take) {
+                nextCursor = users.pop()!.id;
+            }
+
+            return {
+                results: users,
+                nextCursor
+            }
+        } catch {
+            return {
+                results: [],
+                nextCursor: null
+            }
+        }
     }
 }

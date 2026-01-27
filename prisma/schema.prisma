@@ -24,6 +24,8 @@ model RefreshToken {
   hash       String   @unique
   expiresAt  DateTime
   createdAt  DateTime @default(now())
+  agent      String
+  ip         String
   @@index([hash])
 }
 

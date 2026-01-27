@@ -31,7 +31,7 @@ export class HttpErrorFilter implements ExceptionFilter {
 
         return res.status(status).json({
             error_codes: [ErrorCode.UNKNOWN_ERROR],
-            details: resp
+            message: e.message
         })
     }
 }
