@@ -1,13 +1,12 @@
 import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { AuthGuard as PassportAuthGuard } from "@nestjs/passport";
 import type { Response } from "express";
+import { clearAllCookies } from "src/common/helpers/cookiesHelper";
 import { ErrorCode } from "src/exception-filter/errors.enum";
-import { AuthService } from "../auth.service";
 
 @Injectable()
 export class AuthGuard extends PassportAuthGuard("jwt-cookie") {
     constructor(
-        private readonly authService: AuthService
     ) {
         super();
     }
@@ -16,7 +15,7 @@ export class AuthGuard extends PassportAuthGuard("jwt-cookie") {
         const response = context.switchToHttp().getResponse<Response>();
         
         if (err || !user || info) {
-            this.authService.clearCookies(response);
+            clearAllCookies(response);
             throw new UnauthorizedException({
                 code: ErrorCode.INVALID_TOKEN
             });

@@ -8,6 +8,7 @@ import { AppConfig } from './config/config';
 import { PostsModule } from './modules/posts/posts.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { TestModule } from './modules/test/test.module';
+import { FollowsModule } from './modules/follows/follows.module';
 
 @Module({
   imports: [
@@ -24,6 +25,9 @@ import { TestModule } from './modules/test/test.module';
     UsersModule,
     PostsModule,
     CommentsModule,
+    FollowsModule,
+
+    //ONLYTEST!
     TestModule
   ],
   controllers: [],

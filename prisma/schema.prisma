@@ -7,16 +7,39 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  username      String   @unique
+  id            Int          @id @default(autoincrement())
+  username      String       @unique
   firstName     String
   lastName      String
   password      String
-  email         String?  @unique
-  createdAt     DateTime @default(now())
+  email         String?      @unique
+  createdAt     DateTime     @default(now())
   refreshTokens RefreshToken[]
-  posts Post[]
-  comments Comment[]
+  posts         Post[]
+  comments      Comment[]
+  followed      FollowShip[] @relation("UserThatFollowed")
+  followsTo     FollowShip[] @relation("UserFollowedTo")
+  friends1      FriendShip[] @relation("FSUser1")
+  friends2      FriendShip[] @relation("FSUser2")
+}
+
+model FollowShip {
+  id             Int      @id @default(autoincrement())
+  followedId     Int
+  followed       User     @relation("UserThatFollowed", fields: [followedId], references: [id], onDelete: Cascade)
+  followedToInt  Int
+  followedTo     User     @relation("UserFollowedTo", fields: [followedToInt], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  @@index([followedId, followedToInt])
+}
+model FriendShip {
+  id             Int      @id @default(autoincrement())
+  user1Id        Int
+  user1          User     @relation("FSUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id        Int
+  user2          User     @relation("FSUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  @@index([user1Id, user2Id])
 }
 
 model RefreshToken {

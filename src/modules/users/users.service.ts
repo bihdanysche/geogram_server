@@ -42,8 +42,9 @@ export class UsersService {
     async getByUsername(username: string) {
         const us = await this.prisma.user.findUnique({
             where: { username },
-            omit: {
-                password: true
+            select: {
+                firstName: true, lastName: true, username: true, id: true,
+                createdAt: true
             }
         });
         
@@ -59,8 +60,9 @@ export class UsersService {
     async getById(id: number) {
         const us = await this.prisma.user.findUnique({
             where: { id },
-            omit: {
-                password: true
+            select: {
+                firstName: true, lastName: true, username: true, id: true,
+                createdAt: true
             }
         });
 

@@ -19,13 +19,10 @@ import { generate6DigitCode, generateString, hash256 } from "src/common/helpers/
 import { VerifyEmailDTO } from "./dtos/VerifyEmailDTO";
 import { CheckForgotPassCodeDTO } from "./dtos/CheckForgotPassCodeDTO";
 import { ResetPasswordDTO } from "./dtos/ResetPasswordDTO";
+import { clearAllCookies, setCookies } from "src/common/helpers/cookiesHelper";
 
 @Injectable()
 export class AuthService {
-    IS_PROD = process.env.NODE_ENV === 'production';
-    ACCESS_TOKEN_AGE = AppConfig.ACCESS_TOKEN_AGE;
-    REFRESH_TOKEN_AGE = AppConfig.REFRESH_TOKEN_AGE;
-    
     constructor(
         private readonly prisma: PrismaService,
         private readonly jwt: JwtService,
@@ -341,7 +338,7 @@ export class AuthService {
                 where: {hash: token}
             });
         } finally {
-            this.clearCookies(res);
+            clearAllCookies(res);
         }
     }
     
@@ -362,7 +359,7 @@ export class AuthService {
         });
 
         if (!tok || tok.expiresAt < new Date()) {
-            this.clearCookies(res);
+            clearAllCookies(res);
             if (tok) {
                 await this.prisma.refreshToken.delete({
                     where: {id: tok.id}
@@ -404,7 +401,7 @@ export class AuthService {
 
     async issueToken(userId: number, res: Response, req: Request, refreshTokenId?: number) {
         const refreshToken = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + this.REFRESH_TOKEN_AGE);
+        const expiresAt = new Date(Date.now() + AppConfig.REFRESH_TOKEN_AGE);
 
         const hIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
                 req.headers['x-real-ip'] ||
@@ -437,39 +434,6 @@ export class AuthService {
 
         
         const accessToken = this.jwt.sign({ sessionId: refreshTokenId });
-        
-        res.cookie("access_token", accessToken, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: this.IS_PROD,
-            maxAge: this.ACCESS_TOKEN_AGE,
-            path: "/"
-        });
-
-        res.cookie("refresh_token", refreshToken, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: this.IS_PROD,
-            maxAge: this.REFRESH_TOKEN_AGE,
-            path: "/auth"
-        });
-    }
-
-    clearCookies(res: Response) {
-        res.clearCookie("access_token", {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: this.IS_PROD,
-            maxAge: this.ACCESS_TOKEN_AGE,
-            path: "/"
-        });
-
-        res.clearCookie("refresh_token", {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: this.IS_PROD,
-            maxAge: this.REFRESH_TOKEN_AGE,
-            path: "/auth"
-        }); 
+        setCookies(res, accessToken, refreshToken);
     }
 }
