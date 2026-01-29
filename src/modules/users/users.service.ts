@@ -62,7 +62,14 @@ export class UsersService {
             })
         }
 
-        return us;
+         const {_count, ...rest} = us;
+
+        return {
+            ...rest,
+            followedCount: _count.followed,
+            followersCount: _count.followsTo,
+            friendsCount: _count.friends1+_count.friends2
+        };
     }
 
     async getById(id: number) {

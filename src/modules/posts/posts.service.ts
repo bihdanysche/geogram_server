@@ -98,12 +98,17 @@ export class PostsService {
                 author: {
                     select: {
                         firstName: true, lastName: true, username: true,
-                        avatarUrl: true
+                        avatarUrl: true, id: true
                     }
                 },
                 attachments: {
                     select: {
                         url: true, mimeType: true
+                    }
+                },
+                _count: {
+                    select: {
+                        comments: true
                     }
                 }
             }
@@ -115,7 +120,12 @@ export class PostsService {
             })
         }
 
-        return post;
+        const {_count, ...rest} = post;
+        
+        return {
+            commentsCount: _count.comments,
+            ...rest
+        }
     }
 
     async filterPosts(dto: PaginationDTO, authorId?: number) {
@@ -130,13 +140,18 @@ export class PostsService {
                 include: {
                     author: {
                         select: {
-                            firstName: true, lastName: true, username: true,
+                            firstName: true, lastName: true, username: true, id: true,
                             avatarUrl: true
                         }
                     },
                     attachments: {
                         select: {
                             url: true, mimeType: true
+                        }
+                    },
+                    _count: {
+                        select: {
+                            comments: true
                         }
                     }
                 }
@@ -148,7 +163,13 @@ export class PostsService {
             }
 
             return {
-                results: posts,
+                results: posts.map(p => {
+                    const {_count, ...rest} = p;
+                    return {
+                        commentsCount: _count.comments,
+                        ...rest
+                    }
+                }),
                 nextCursor
             }
         } catch {
