@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { HttpErrorFilter } from './exception-filter/exception.filter';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { MulterExceptionFilter } from './exception-filter/multer-exception.filter';
+import { AppConfig } from './config/app.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -14,8 +15,7 @@ async function bootstrap() {
   app.set('trust proxy', true);
   app.enableCors({
     origin: [
-      'http://127.0.0.1:5500',
-      'http://localhost:5500'
+      AppConfig.originURL
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

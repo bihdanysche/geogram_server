@@ -16,7 +16,7 @@ export class UsersService {
     ) {};
 
     async me(userId: number) {
-        return await this.getById(userId);
+        return await this.getById(userId, true);
     }
 
     async editUser(userId: number, dto: EditUserDTO) {
@@ -72,7 +72,7 @@ export class UsersService {
         };
     }
 
-    async getById(id: number) {
+    async getById(id: number, isMe?: boolean) {
         const us = await this.prisma.user.findUnique({
             where: { id },
             select: {
@@ -83,9 +83,14 @@ export class UsersService {
                         followed: true,
                         followsTo: true,
                         friends1: true,
-                        friends2: true
+                        friends2: true,
+                        notifications: isMe ? {
+                            where: {
+                                isChecked: false
+                            }
+                        } : undefined
                     }
-                }
+                },
             },
         });
 
@@ -101,7 +106,8 @@ export class UsersService {
             ...rest,
             followedCount: _count.followed,
             followersCount: _count.followsTo,
-            friendsCount: _count.friends1+_count.friends2
+            friendsCount: _count.friends1+_count.friends2,
+            notifcationsCount: _count.notifications
         };
     }
 

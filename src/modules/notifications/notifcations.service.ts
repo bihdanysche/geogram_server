@@ -1,9 +1,77 @@
 import { Injectable } from "@nestjs/common";
+import { PaginationDTO } from "src/common/dtos/PaginationDTO";
 import { PrismaService } from "src/prisma/prisma.service";
+import { NotificationsGateway } from "./notifications.gateway";
+import type { NotifcationKind } from "@prisma/client";
 
 @Injectable()
 export class NotificationsService {
     constructor(
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
+        private readonly gateway: NotificationsGateway
     ) {}
+
+    async getNotifications(userId: number, pagination: PaginationDTO) {
+        const query = await this.prisma.notification.findMany({
+            where: { userId },
+            select: {
+                kind: true, date: true, isChecked: true, meta: true, id: true
+            },
+            orderBy: { date: "desc" },
+            take: pagination.take + 1,
+            cursor: pagination.cursor ? { id: pagination.cursor } : undefined
+        });
+
+        let nextCursor: number|null = null;
+        if (query.length > pagination.take) {
+            const last = query.pop();
+            nextCursor = last?.id || null;
+        }
+
+        void this.markAllAsReaded(userId);
+
+        return {
+            results: query,
+            nextCursor
+        }
+    }
+
+    async markAllAsReaded(userId: number) {
+        await this.prisma.notification.updateMany({
+            where: { userId, isChecked: false },
+            data: { isChecked: true }
+        });
+    }
+
+    async pushFollowNotification(toUserId: number, fromUserId: number) {
+        await this.pushNotification("NewFollow", toUserId, {
+            usid: fromUserId
+        });
+    }
+
+    async pushFriendsNotification(toUserId: number, fromUserId: number) {
+        await this.pushNotification("NewFriend", toUserId, {
+            usid: fromUserId
+        });
+    }
+
+    async pushWelcomeNotification(toUserId: number) {
+        await this.pushNotification("Welcome", toUserId);
+    }
+
+    async pushNotification(kind: NotifcationKind, userId: number, meta?: any) {
+        const notif = await this.prisma.notification.create({
+            data: {
+                kind: kind,
+                userId,
+                meta: meta || {}
+            }
+        });
+
+        const roomId = this.gateway.getRoomIdForUser(userId);
+        this.gateway.server.to(roomId).emit("notification", {
+            kind: notif.kind,
+            meta
+        });
+    }
 }

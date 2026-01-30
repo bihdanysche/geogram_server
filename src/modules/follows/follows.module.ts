@@ -3,11 +3,13 @@ import { AuthModule } from "../auth/auth.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { FollowsService } from "./follows.service";
 import { FollowsController } from "./follows.controller";
+import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
     imports: [
         PrismaModule,
-        AuthModule
+        AuthModule,
+        NotificationsModule
     ],
     providers: [ FollowsService ],
     controllers: [ FollowsController ]

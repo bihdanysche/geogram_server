@@ -2,11 +2,13 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { PaginationDTO } from "src/common/dtos/PaginationDTO";
 import { ErrorCode } from "src/exception-filter/errors.enum";
 import { PrismaService } from "src/prisma/prisma.service";
+import { NotificationsService } from "../notifications/notifcations.service";
 
 @Injectable()
 export class FollowsService {
     constructor(
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
+        private readonly notifcationsService: NotificationsService
     ) {}
 
     async followUser(followTo: number, userId: number) {
@@ -46,6 +48,9 @@ export class FollowsService {
                         user2Id: followTo,
                     }
                 });
+                await this.notifcationsService.pushFriendsNotification(followTo, userId);
+            } else {
+                await this.notifcationsService.pushFollowNotification(followTo, userId);
             }
         } catch {
             throw new BadRequestException({

@@ -20,6 +20,7 @@ import { VerifyEmailDTO } from "./dtos/VerifyEmailDTO";
 import { CheckForgotPassCodeDTO } from "./dtos/CheckForgotPassCodeDTO";
 import { ResetPasswordDTO } from "./dtos/ResetPasswordDTO";
 import { clearAllCookies, setCookies } from "src/common/helpers/cookiesHelper";
+import { NotificationsService } from "../notifications/notifcations.service";
 
 @Injectable()
 export class AuthService {
@@ -27,7 +28,8 @@ export class AuthService {
         private readonly prisma: PrismaService,
         private readonly jwt: JwtService,
         @Inject(REDIS) private readonly redis: Redis,
-        private readonly mailer: MailerService
+        private readonly mailer: MailerService,
+        private readonly notificationsService: NotificationsService
     ) {}
     
     async login(dto: LoginDTO, res: Response, req: Request) {
@@ -60,6 +62,7 @@ export class AuthService {
                     password: hash
                 }
             });
+            void this.notificationsService.pushWelcomeNotification(user.id);
         } catch (e) {
             if (e instanceof PrismaClientKnownRequestError && e.code == "P2002") {
                 throw new ConflictException({code: ErrorCode.USERNAME_TAKEN});

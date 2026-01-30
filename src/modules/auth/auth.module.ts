@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
@@ -7,13 +7,15 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { AuthCleanupService } from "./cleanup.service";
 import { RedisModule } from "src/redis/redis.module";
 import { MailerModule } from "src/mailer/mailer.module";
+import { NotificationsModule } from "../notifications/notifications.module";
 
 @Module({
     imports: [
         PrismaModule,
         ScheduleModule.forRoot(),
         RedisModule,
-        MailerModule
+        MailerModule,
+        forwardRef(() => NotificationsModule)
     ],
     controllers: [AuthController],
     providers: [JwtCookieStrategy, AuthService, AuthCleanupService]

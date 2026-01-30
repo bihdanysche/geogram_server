@@ -23,6 +23,27 @@ model User {
   followsTo     FollowShip[] @relation("UserFollowedTo")
   friends1      FriendShip[] @relation("FSUser1")
   friends2      FriendShip[] @relation("FSUser2")
+  notifications Notification[]
+}
+
+model Notification {
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isChecked     Boolean    @default(false)
+  kind          NotifcationKind
+  meta          Json
+  date          DateTime   @default(now())
+  @@index([userId, id, kind])
+}
+enum NotifcationKind {
+  LikedPost
+  LikedComment
+  CommentedPost
+  CommentedComment
+  NewFollow
+  NewFriend
+  Welcome
 }
 
 model FollowShip {
