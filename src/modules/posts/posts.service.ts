@@ -134,7 +134,7 @@ export class PostsService {
                 where: {
                     authorId: authorId ? authorId : undefined
                 },
-                orderBy: { createdAt: "desc" },
+                orderBy: { createdAt: "desc" }, // MUST FIX
                 take: dto.take+1,
                 cursor: dto.cursor ? { id: dto.cursor } : undefined,
                 include: {

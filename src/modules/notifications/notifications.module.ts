@@ -5,6 +5,7 @@ import { NotificationsService } from "./notifcations.service";
 import { NotificationsController } from "./notifcations.controller";
 import { NotificationsGateway } from "./notifications.gateway";
 import { RedisModule } from "src/redis/redis.module";
+import { NotificationsJobService } from "./notifications-job.service";
 
 @Module({
     imports: [
@@ -12,7 +13,7 @@ import { RedisModule } from "src/redis/redis.module";
         RedisModule,
         forwardRef(() => AuthModule)
     ],
-    providers: [NotificationsService, NotificationsGateway],
+    providers: [NotificationsService, NotificationsGateway, NotificationsJobService],
     controllers: [NotificationsController],
     exports: [NotificationsService]
 })
