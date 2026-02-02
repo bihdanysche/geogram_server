@@ -11,6 +11,7 @@ export class NotificationsService {
         private readonly gateway: NotificationsGateway
     ) {}
 
+    // Controller Methods
     async getNotifications(userId: number, pagination: PaginationDTO) {
         const query = await this.prisma.notification.findMany({
             where: { userId },
@@ -43,6 +44,7 @@ export class NotificationsService {
         });
     }
 
+    // Push methods
     async pushFollowNotification(toUserId: number, fromUserId: number) {
         await this.pushNotification("NewFollow", toUserId, {
             usid: fromUserId
@@ -60,13 +62,25 @@ export class NotificationsService {
     }
 
     async pushNotification(kind: NotifcationKind, userId: number, meta?: any) {
+        if (!meta) {
+            meta = {};
+        }
+
         const notif = await this.prisma.notification.create({
             data: {
                 kind: kind,
                 userId,
-                meta: meta || {}
+                meta
             }
         });
+
+        const newCount = await this.prisma.notification.count({
+            where: {
+                isChecked: false,
+                userId
+            }
+        });
+        meta.unreadedCount = newCount;
 
         const roomId = this.gateway.getRoomIdForUser(userId);
         this.gateway.server.to(roomId).emit("notification", {

@@ -7,23 +7,24 @@ datasource db {
 }
 
 model User {
-  id            Int          @id @default(autoincrement())
-  username      String       @unique
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
   firstName     String
   lastName      String
   password      String
-  email         String?      @unique
-  createdAt     DateTime     @default(now())
-  avatarUrl     String       @default("/avatars/no-avatar.jpg")
-  coverUrl      String       @default("/covers/no-cover.png")
+  email         String?        @unique
+  createdAt     DateTime       @default(now())
+  avatarUrl     String         @default("/avatars/no-avatar.jpg")
+  coverUrl      String         @default("/covers/no-cover.png")
   refreshTokens RefreshToken[]
   posts         Post[]
   comments      Comment[]
-  followed      FollowShip[] @relation("UserThatFollowed")
-  followsTo     FollowShip[] @relation("UserFollowedTo")
-  friends1      FriendShip[] @relation("FSUser1")
-  friends2      FriendShip[] @relation("FSUser2")
+  followed      FollowShip[]   @relation("UserThatFollowed")
+  followsTo     FollowShip[]   @relation("UserFollowedTo")
+  friends1      FriendShip[]   @relation("FSUser1")
+  friends2      FriendShip[]   @relation("FSUser2")
   notifications Notification[]
+  postRatings   PostRating[]
 }
 
 model Notification {
@@ -86,7 +87,24 @@ model Post {
   createdAt    DateTime  @default(now())
   comments     Comment[]
   attachments  PostAttachment[]
+  ratings      PostRating[]
   @@index([id, authorId])
+}
+
+model PostRating {
+  id           Int       @id @default(autoincrement())
+  postId       Int
+  post         Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         PostRatingType
+  @@unique([postId, userId])
+  @@index([postId,type])
+}
+
+enum PostRatingType {
+  Like
+  Dislike
 }
 
 model PostAttachment {

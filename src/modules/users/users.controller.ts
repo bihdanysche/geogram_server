@@ -6,6 +6,7 @@ import { UsersFilterDTO } from "./dtos/UsersFilterDTO";
 import { EditUserDTO } from "./dtos/EditUserDTO";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { imgUploadConfig } from "src/config/multer.config";
+import { OptionalAuthGuard } from "../auth/guards/optional-auth.guard";
 
 @Controller("users")
 export class UsersController {
@@ -13,14 +14,15 @@ export class UsersController {
         private readonly usersService: UsersService
     ) {};
 
-    @Get("/by-username/:username")
-    async getUserByUsername(@Param("username") username: string) {
-        return await this.usersService.getByUsername(username);
-    };
+    // @Get("/by-username/:username")
+    // async getUserByUsername(@Param("username") username: string) {
+    //     return await this.usersService.getByUsername(username);
+    // };
 
     @Get("/by-id/:id")
-    async getUserById(@Param("id", ParseIntPipe) id: number) {
-        return await this.usersService.getById(id);
+    @UseGuards(OptionalAuthGuard)
+    async getUserById(@Param("id", ParseIntPipe) id: number, @UserId() meId: number) {
+        return await this.usersService.getById(id, meId);
     };
 
     @Get("/filter-users")

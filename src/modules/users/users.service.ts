@@ -16,7 +16,7 @@ export class UsersService {
     ) {};
 
     async me(userId: number) {
-        return await this.getById(userId, true);
+        return await this.getById(userId, userId, true);
     }
 
     async editUser(userId: number, dto: EditUserDTO) {
@@ -39,60 +39,75 @@ export class UsersService {
         });
     }
 
-    async getByUsername(username: string) {
-        const us = await this.prisma.user.findUnique({
-            where: { username },
-            select: {
-                firstName: true, lastName: true, username: true, id: true,
-                createdAt: true, avatarUrl: true, coverUrl: true,
-                _count: {
-                    select: {
-                        followed: true,
-                        followsTo: true,
-                        friends1: true,
-                        friends2: true
-                    }
-                }
-            }
-        });
+    // async getByUsername(username: string, meId?: number) {
+    //     const us = await this.prisma.user.findUnique({
+    //         where: { username },
+    //         select: {
+    //             firstName: true, lastName: true, username: true, id: true,
+    //             createdAt: true, avatarUrl: true, coverUrl: true,
+    //             _count: {
+    //                 select: {
+    //                     followed: true,
+    //                     followsTo: true,
+    //                     friends1: true,
+    //                     friends2: true
+    //                 }
+    //             }
+    //         }
+    //     });
         
-        if (!us) {
-            throw new NotFoundException({
-                code: ErrorCode.NOT_EXISTING_USER
-            })
-        }
+    //     if (!us) {
+    //         throw new NotFoundException({
+    //             code: ErrorCode.NOT_EXISTING_USER
+    //         })
+    //     }
 
-         const {_count, ...rest} = us;
+    //     const {_count, ...rest} = us;
 
-        return {
-            ...rest,
-            followedCount: _count.followed,
-            followersCount: _count.followsTo,
-            friendsCount: _count.friends1+_count.friends2
-        };
-    }
+    //     return {
+    //         ...rest,
+    //         followedCount: _count.followed,
+    //         followersCount: _count.followsTo,
+    //         friendsCount: _count.friends1+_count.friends2
+    //     };
+    // }
 
-    async getById(id: number, isMe?: boolean) {
-        const us = await this.prisma.user.findUnique({
-            where: { id },
-            select: {
-                firstName: true, lastName: true, username: true, id: true,
-                createdAt: true, avatarUrl: true, coverUrl: true,
-                _count: {
-                    select: {
-                        followed: true,
-                        followsTo: true,
-                        friends1: true,
-                        friends2: true,
-                        notifications: isMe ? {
-                            where: {
-                                isChecked: false
-                            }
-                        } : undefined
-                    }
+    async getById(id: number, meId?: number, isMe?: boolean) {
+        const notMeAndAuth = (id !== meId) && (meId);
+        const [us, meFollowed, toMeFollowed] = await this.prisma.$transaction(async tx => {
+            const userQuery = await tx.user.findUnique({
+                where: { id },
+                select: {
+                    firstName: true, lastName: true, username: true, id: true,
+                    createdAt: true, avatarUrl: true, coverUrl: true,
+                    _count: {
+                        select: {
+                            followed: true,
+                            followsTo: true,
+                            friends1: true,
+                            friends2: true,
+                            notifications: isMe ? {
+                                where: {
+                                    isChecked: false
+                                }
+                            } : undefined
+                        }
+                    },
                 },
-            },
-        });
+            });
+
+            const meFollowedCountQuery = notMeAndAuth ? 
+                await this.prisma.followShip.count({
+                    where: { followedId: meId, followedToInt: id }
+                }) : 0;
+
+            const toMeFollowedCountQuery = notMeAndAuth ? 
+                await this.prisma.followShip.count({
+                    where: { followedId: id, followedToInt: meId }
+                }) : 0;
+
+            return [userQuery, meFollowedCountQuery, toMeFollowedCountQuery];
+        })
 
         if (!us) {
             throw new NotFoundException({
@@ -107,7 +122,9 @@ export class UsersService {
             followedCount: _count.followed,
             followersCount: _count.followsTo,
             friendsCount: _count.friends1+_count.friends2,
-            notifcationsCount: _count.notifications
+            notifcationsCount: _count.notifications,
+            isIFollowed: notMeAndAuth ? (meFollowed === 1) : undefined,
+            isMeFollowed: notMeAndAuth ? (toMeFollowed === 1) : undefined,
         };
     }
 
