@@ -11,6 +11,7 @@ import { TestModule } from './modules/test/test.module';
 import { FollowsModule } from './modules/follows/follows.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     CommentsModule,
     FollowsModule,
     NotificationsModule,
+    MetricsModule,
 
     //ONLYTEST!
     TestModule
