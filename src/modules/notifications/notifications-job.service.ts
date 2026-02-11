@@ -3,7 +3,7 @@ import { Cron } from "@nestjs/schedule";
 import Redis from "ioredis";
 import { PrismaService } from "src/prisma/prisma.service";
 import { REDIS } from "src/redis/redis.module";
-import type { NotifcationKind, PrismaPromise } from "@prisma/client";
+import type { NotificationKind, PrismaPromise } from "@prisma/client";
 import { NotificationsGateway } from "./notifications.gateway";
 
 const KINDS = [
@@ -72,7 +72,7 @@ export class NotificationsJobService {
             prismaOps.push(
                 this.prisma.notification.deleteMany({
                     where: {
-                        kind: kind as NotifcationKind,
+                        kind: kind as NotificationKind,
                         userId,
                         date: {
                             gte: hourAgo
@@ -83,7 +83,7 @@ export class NotificationsJobService {
             prismaOps.push(
                 this.prisma.notification.create({
                     data: {
-                        kind: kind as NotifcationKind,
+                        kind: kind as NotificationKind,
                         userId,
                         meta,
                     }

@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { PaginationDTO } from "src/common/dtos/PaginationDTO";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NotificationsGateway } from "./notifications.gateway";
-import type { NotifcationKind } from "@prisma/client";
+import type { NotificationKind } from "@prisma/client";
 import Redis from "ioredis";
 import { REDIS } from "src/redis/redis.module";
 
@@ -64,7 +64,7 @@ export class NotificationsService {
         await this.pushNotification("Welcome", toUserId);
     }
 
-    async pushNotification(kind: NotifcationKind, userId: number, meta?: any) {
+    async pushNotification(kind: NotificationKind, userId: number, meta?: any) {
         if (!meta) {
             meta = {};
         }

@@ -32,12 +32,12 @@ model Notification {
   userId        Int
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   isChecked     Boolean    @default(false)
-  kind          NotifcationKind
+  kind          NotificationKind
   meta          Json
   date          DateTime   @default(now())
   @@index([userId, id, kind, date(sort: Desc)])
 }
-enum NotifcationKind {
+enum NotificationKind {
   NewFollow
   NewFriend
   Welcome
@@ -137,5 +137,3 @@ model Comment {
 
   @@index([id, postId, authorId, parentId])
 }
-
-// npx prisma migrate dev --name init
