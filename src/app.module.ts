@@ -7,7 +7,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { AppConfig } from './config/app.config';
 import { PostsModule } from './modules/posts/posts.module';
 import { CommentsModule } from './modules/comments/comments.module';
-import { TestModule } from './modules/test/test.module';
 import { FollowsModule } from './modules/follows/follows.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -32,9 +31,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     CommentsModule,
     FollowsModule,
     NotificationsModule,
-
-    //ONLYTEST!
-    TestModule
   ],
   controllers: [],
   providers: [],

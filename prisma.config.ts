@@ -3,6 +3,10 @@
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
+function getDbUrl() {
+  return `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@postgres:5432/${process.env.POSTGRES_DB}?schema=public`;
+}
+
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
@@ -10,6 +14,6 @@ export default defineConfig({
     seed: 'ts-node prisma/seed.ts',
   },
   datasource: {
-    url: process.env['DATABASE_URL'],
+    url: getDbUrl()
   },
 });
